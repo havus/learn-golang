@@ -45,6 +45,11 @@ func main() {
 	fmt.Println(countFactorial(5))
 
 	fmt.Println(divideNumbers(10, 2, 0)) // panic: runtime error: integer divide by zero
+	printApapun("Hello,", 1, true)
+
+	// interface return converter
+	fmt.Println(countFactorial(returnFive().(int)))
+	// fmt.Println(countFactorial(returnFive())) // error
 }
 
 // normal function
@@ -131,4 +136,14 @@ func endFunction() {
 	errorMessage := recover()
 	fmt.Println("Error message adalah", errorMessage)
 	fmt.Println("Function selesai!")
+}
+
+func printApapun(params ...interface{}) {
+	for _, param := range params {
+		fmt.Println(param)
+	}
+}
+
+func returnFive() interface{} {
+	return 5
 }

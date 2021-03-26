@@ -118,6 +118,13 @@ func main() {
 	delete(myMap, "address")
 	fmt.Println("myMap", myMap)
 
+	// var dummyMap map[string]string = map[string]string{} // data ada
+	var dummyMap map[string]string // data kosong
+
+	if dummyMap == nil {
+		fmt.Println("Kosong")
+	}
+
 	fmt.Println("================== If Statement ==================")
 
 	role := "manager"
@@ -164,6 +171,17 @@ func main() {
 		fmt.Println("Kurang dari 5")
 	}
 
+	// var dummyRole interface{} = 1
+
+	// switch value := returnRandom().(type) {
+	// case string:
+	// 	fmt.Println("String", value)
+	// case int:
+	// 	fmt.Println("Integer", value, returnRandom().(string))
+	// }
+
+	fmt.Println(returnRandom().(string))
+
 	fmt.Println("================== Loop ==================")
 
 	counter1 := 0
@@ -192,4 +210,8 @@ func main() {
 	for key, value := range myMap {
 		fmt.Println(key, "=>", value)
 	}
+}
+
+func returnRandom() interface{} {
+	return 10
 }
