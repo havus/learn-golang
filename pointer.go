@@ -8,6 +8,10 @@ type Identity struct {
 	IsMarried bool
 }
 
+func (identity *Identity) changeFirstName(newFirstName string) {
+	identity.FirstName = newFirstName
+}
+
 func main() {
 	// https://app.diagrams.net/#G17YWt5h3tSluXloSy9W0x_VLB3VN243jF
 
@@ -86,4 +90,11 @@ func main() {
 	fmt.Println("budi", budi)
 	fmt.Println("santoso", santoso)
 	fmt.Println("valarie", valarie)
+
+	// Pointer Method
+	simbada := new(Identity)
+	simbada.FirstName = "Simbada"
+	simbada.changeFirstName("Simbada Changed")
+
+	fmt.Println(simbada.FirstName)
 }
