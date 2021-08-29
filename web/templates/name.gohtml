@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{.Title}}</title>
+</head>
+<body>
+  {{.Body}}
+  <h5>Address: {{.Address.Street}}, no: {{.Address.Number}}</h5>
+
+  <h3>
+    {{ if .Address.LockdownStatus }}
+      Lockdown status: {{ .Address.LockdownStatus }}
+    {{ else if .Address.Number }}
+      Maybe lockdown in number {{ .Address.Number }}
+    {{ else }}
+      No lockdown status
+    {{ end }}
+  </h3>
+
+  <div id="with">
+    {{ with .Address }}
+      <h3>Lockdown in: {{ .Street }}!</h3>
+    {{ else }}
+      <h3>Nothing here!</h3>
+    {{ end }}
+  </div>
+
+  <span>
+    Blok:
+    {{ if ge .Address.Number 20 }}
+      A
+    {{ else }}
+      B
+    {{ end }}
+  </span>
+
+  <h3>Hobbies:</h3>
+  <ul>
+    {{ range $index, $element := .Hobbies }}
+      <li>{{ $element }}</li>
+    {{ else }}
+      <li>No hobby, you've bad life!</li>
+    {{ end }}
+  </ul>
+
+  {{/* test comment -> This is will NOT be rendered! */}}
+
+  {{ template "footer.gohtml" .Address }}
+</body>
+</html>
