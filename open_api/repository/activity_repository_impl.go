@@ -1,13 +1,19 @@
 package repository
 
 import (
+	"errors"
+	"strconv"
 	"context"
 	"database/sql"
-	"open_api/model/domain"
 	"open_api/helper"
+	"open_api/model/domain"
 )
 
 type ActivityRepositoryImpl struct {
+}
+
+func NewActivityRepository() ActivityRepository {
+	return &ActivityRepositoryImpl{}
 }
 
 func (repository *ActivityRepositoryImpl) Save(ctx context.Context, tx *sql.Tx, activity domain.Activity) domain.Activity {
@@ -36,7 +42,7 @@ func (repository *ActivityRepositoryImpl) Delete(ctx context.Context, tx *sql.Tx
 	helper.PanicIfError(err)
 }
 
-func (repository *ActivityRepositoryImpl) FindById(ctx context.Context, tx *sql.Tx, activityId int) domain.Activity, error {
+func (repository *ActivityRepositoryImpl) FindById(ctx context.Context, tx *sql.Tx, activityId int) (domain.Activity, error) {
 	query 		:= "SELECT id, name, status FROM activity WHERE id = ? LIMIT 1"
 	rows, err := tx.QueryContext(ctx, query, activityId)
 	helper.PanicIfError(err)
@@ -49,7 +55,7 @@ func (repository *ActivityRepositoryImpl) FindById(ctx context.Context, tx *sql.
 
 		return activity, nil
 	} else {
-		return activity, errors.New("activity with id " + strconv.Itoa(int(id)) + " not found!")
+		return activity, errors.New("activity with id " + strconv.Itoa(activityId) + " not found!")
 	}
 }
 
@@ -61,7 +67,7 @@ func (repository *ActivityRepositoryImpl) FindAll(ctx context.Context, tx *sql.T
 	var activities []domain.Activity
 
 	for rows.Next() {
-		activity := entity.Activity{}
+		activity := domain.Activity{}
 		errRow := rows.Scan(&activity.Id, &activity.Name, &activity.Status)
 		helper.PanicIfError(errRow)
 

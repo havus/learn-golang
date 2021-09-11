@@ -3,7 +3,6 @@ package helper
 import (
 	"encoding/json"
 	"net/http"
-	"open_api/model/web"
 )
 
 func ReadFromRequestBody(request *http.Request, result interface{}) {

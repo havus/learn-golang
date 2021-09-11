@@ -3,16 +3,21 @@ package controller
 import (
 	"strconv"
 	"net/http"
-	"encoding/json"
+	// "encoding/json"
 	"github.com/julienschmidt/httprouter"
 	"open_api/model/web"
 	"open_api/service"
 	"open_api/helper"
-	"open_api/model/web"
 )
 
 type ActivityControllerImpl struct {
 	ActivityService service.ActivityService
+}
+
+func NewActivityController(activityService service.ActivityService) ActivityController {
+	return &ActivityControllerImpl{
+		ActivityService: activityService,
+	}
 }
 
 func (controller *ActivityControllerImpl) Create(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
@@ -38,7 +43,7 @@ func (controller *ActivityControllerImpl) Create(writer http.ResponseWriter, req
 	// errEncoder := encoder.Encode(webResponse)
 	// helper.PanicIfError(errEncoder)
 	// =============== refactor with ===============
-	helper.WriteToResponseBody(webResponse)
+	helper.WriteToResponseBody(writer, webResponse)
 }
 
 func (controller *ActivityControllerImpl) Update(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
@@ -57,7 +62,7 @@ func (controller *ActivityControllerImpl) Update(writer http.ResponseWriter, req
 
 	activityUpdateRequest.Id = intParamId
 
-	activityResponse := controller.ActivityService.Create(request.Context(), activityUpdateRequest)
+	activityResponse := controller.ActivityService.Update(request.Context(), activityUpdateRequest)
 	webResponse := web.WebResponse{
 		Code: 	201,
 		Status: "Ok",
@@ -70,7 +75,7 @@ func (controller *ActivityControllerImpl) Update(writer http.ResponseWriter, req
 	// errEncoder := encoder.Encode(webResponse)
 	// helper.PanicIfError(errEncoder)
 	// =============== refactor with ===============
-	helper.WriteToResponseBody(webResponse)
+	helper.WriteToResponseBody(writer, webResponse)
 }
 
 func (controller *ActivityControllerImpl) Delete(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
@@ -90,7 +95,7 @@ func (controller *ActivityControllerImpl) Delete(writer http.ResponseWriter, req
 	// errEncoder := encoder.Encode(webResponse)
 	// helper.PanicIfError(errEncoder)
 	// =============== refactor with ===============
-	helper.WriteToResponseBody(webResponse)
+	helper.WriteToResponseBody(writer, webResponse)
 }
 
 func (controller *ActivityControllerImpl) FindById(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
@@ -98,11 +103,10 @@ func (controller *ActivityControllerImpl) FindById(writer http.ResponseWriter, r
 	intParamId, errConversion := strconv.Atoi(paramId) 
 	helper.PanicIfError(errConversion)
 
-	activityResponse := controller.ActivityService.Delete(request.Context(), intParamId)
+	controller.ActivityService.Delete(request.Context(), intParamId)
 	webResponse := web.WebResponse{
 		Code: 	201,
 		Status: "Ok",
-		Data: 	activityResponse,
 	}
 
 	// writer.Header().Add("Content-Type", "application/json")
@@ -111,11 +115,11 @@ func (controller *ActivityControllerImpl) FindById(writer http.ResponseWriter, r
 	// errEncoder := encoder.Encode(webResponse)
 	// helper.PanicIfError(errEncoder)
 	// =============== refactor with ===============
-	helper.WriteToResponseBody(webResponse)
+	helper.WriteToResponseBody(writer, webResponse)
 }
 
 func (controller *ActivityControllerImpl) FindAll(writer http.ResponseWriter, request *http.Request, params httprouter.Params) { 
-	activityResponses := controller.ActivityService.Delete(request.Context())
+	activityResponses := controller.ActivityService.FindAll(request.Context())
 	webResponse := web.WebResponse{
 		Code: 	201,
 		Status: "Ok",
@@ -128,5 +132,5 @@ func (controller *ActivityControllerImpl) FindAll(writer http.ResponseWriter, re
 	// errEncoder := encoder.Encode(webResponse)
 	// helper.PanicIfError(errEncoder)
 	// =============== refactor with ===============
-	helper.WriteToResponseBody(webResponse)
+	helper.WriteToResponseBody(writer, webResponse)
 }

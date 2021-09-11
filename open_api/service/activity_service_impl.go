@@ -7,12 +7,21 @@ import (
 	"open_api/repository"
 	"open_api/helper"
 	"open_api/model/domain"
+	"github.com/go-playground/validator/v10"
 )
 
 type ActivityServiceImpl struct {
 	ActivityRepository 	repository.ActivityRepository
 	DB 									*sql.DB
 	Validate						*validator.Validate
+}
+
+func NewActivityService(ActivityRepository repository.ActivityRepository, DB *sql.DB, Validate *validator.Validate) ActivityService {
+	return &ActivityServiceImpl{
+		ActivityRepository: ActivityRepository,
+		DB: 								DB,
+		Validate: 					Validate,
+	}
 }
 
 func (service *ActivityServiceImpl) Create(ctx context.Context, request web.ActivityCreateRequest) web.ActivityResponse {
@@ -45,7 +54,7 @@ func (service *ActivityServiceImpl) Update(ctx context.Context, request web.Acti
 	defer helper.CommitOrRollback(tx)
 
 	activity, err := service.ActivityRepository.FindById(ctx, tx, request.Id)
-	PanicIfError(err) // if not found
+	helper.PanicIfError(err) // if not found
 
 	activity.Name 	= request.Name
 	activity.Status = request.Status
@@ -62,9 +71,9 @@ func (service *ActivityServiceImpl) Delete(ctx context.Context, activityId int) 
 	defer helper.CommitOrRollback(tx)
 
 	activity, err := service.ActivityRepository.FindById(ctx, tx, activityId)
-	PanicIfError(err) // if not found
+	helper.PanicIfError(err) // if not found
 
-	service.ActivityRepository.Delete(ctx, tx, activityId)
+	service.ActivityRepository.Delete(ctx, tx, activity)
 }
 
 func (service *ActivityServiceImpl) FindById(ctx context.Context, activityId int) web.ActivityResponse {
@@ -73,13 +82,13 @@ func (service *ActivityServiceImpl) FindById(ctx context.Context, activityId int
 
 	defer helper.CommitOrRollback(tx)
 
-	activity, err := service.ActivityRepository.FindById(ctx, tx, request.Id)
-	PanicIfError(err) // if not found
+	activity, err := service.ActivityRepository.FindById(ctx, tx, activityId)
+	helper.PanicIfError(err) // if not found
 
 	return helper.ToActivityResponse(activity)
 }
 
-func (service *ActivityServiceImpl) Create(ctx context.Context) []web.ActivityResponse {
+func (service *ActivityServiceImpl) FindAll(ctx context.Context) []web.ActivityResponse {
 	tx, err := service.DB.Begin()
 	helper.PanicIfError(err)
 
