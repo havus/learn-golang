@@ -49,6 +49,8 @@ func (repository *ActivityRepositoryImpl) FindById(ctx context.Context, tx *sql.
 
 	activity := domain.Activity{}
 
+	defer rows.Close()
+
 	if rows.Next() {
 		errRow := rows.Scan(&activity.Id, &activity.Name, &activity.Status)
 		helper.PanicIfError(errRow)
@@ -63,6 +65,8 @@ func (repository *ActivityRepositoryImpl) FindAll(ctx context.Context, tx *sql.T
 	query 		:= "SELECT id, name, status FROM activity"
 	rows, err := tx.QueryContext(ctx, query)
 	helper.PanicIfError(err)
+
+	defer rows.Close()
 
 	var activities []domain.Activity
 

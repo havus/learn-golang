@@ -1,35 +1,42 @@
 package main
 
 import (
-	"github.com/julienschmidt/httprouter"
-	"github.com/go-playground/validator/v10"
-	_ "github.com/go-sql-driver/mysql"
+	"fmt"
 	"net/http"
+	"open_api/app"
+	"open_api/controller"
+	"open_api/exception"
+	"open_api/helper"
 	"open_api/repository"
 	"open_api/service"
-	"open_api/controller"
-	"open_api/app"
-	"open_api/helper"
+
+	"github.com/go-playground/validator/v10"
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/julienschmidt/httprouter"
 )
 
 func main() {
-	mydb 				:= app.NewDB()
+	mydb := app.NewDB()
 	myValidator := validator.New()
 
-	activityRepository 	:= repository.NewActivityRepository()
-	activityService 		:= service.NewActivityService(activityRepository, mydb, myValidator)
-	activityController 	:= controller.NewActivityController(activityService)
+	activityRepository := repository.NewActivityRepository()
+	activityService := service.NewActivityService(activityRepository, mydb, myValidator)
+	activityController := controller.NewActivityController(activityService)
 
 	router := httprouter.New()
-	router.POST("/api/activities", 									activityController.Create)
-	router.PUT("/api/activities/:activitiesId", 		activityController.Update)
-	router.DELETE("/api/activities/:activitiesId", 	activityController.Delete)
+	router.POST("/api/activities", activityController.Create)
+	router.PUT("/api/activities/:activityId", activityController.Update)
+	router.DELETE("/api/activities/:activityId", activityController.Delete)
 
-	router.GET("/api/activities", 									activityController.FindAll)
-	router.GET("/api/activities/:activitiesId", 		activityController.FindById)
+	router.GET("/api/activities", activityController.FindAll)
+	router.GET("/api/activities/:activityId", activityController.FindById)
+
+	fmt.Println("Impressive, server running now...!")
+
+	router.PanicHandler = exception.ErrorHandler
 
 	server := http.Server{
-		Addr: "localhost:3000",
+		Addr:    "localhost:3000",
 		Handler: router,
 	}
 

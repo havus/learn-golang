@@ -3,24 +3,26 @@ package service
 import (
 	"context"
 	"database/sql"
-	"open_api/model/web"
-	"open_api/repository"
+	"open_api/exception"
 	"open_api/helper"
 	"open_api/model/domain"
+	"open_api/model/web"
+	"open_api/repository"
+
 	"github.com/go-playground/validator/v10"
 )
 
 type ActivityServiceImpl struct {
-	ActivityRepository 	repository.ActivityRepository
-	DB 									*sql.DB
-	Validate						*validator.Validate
+	ActivityRepository repository.ActivityRepository
+	DB                 *sql.DB
+	Validate           *validator.Validate
 }
 
 func NewActivityService(ActivityRepository repository.ActivityRepository, DB *sql.DB, Validate *validator.Validate) ActivityService {
 	return &ActivityServiceImpl{
 		ActivityRepository: ActivityRepository,
-		DB: 								DB,
-		Validate: 					Validate,
+		DB:                 DB,
+		Validate:           Validate,
 	}
 }
 
@@ -35,7 +37,7 @@ func (service *ActivityServiceImpl) Create(ctx context.Context, request web.Acti
 
 	activity := domain.Activity{
 		// Id
-		Name: request.Name,
+		Name:   request.Name,
 		Status: request.Status,
 	}
 
@@ -53,10 +55,12 @@ func (service *ActivityServiceImpl) Update(ctx context.Context, request web.Acti
 
 	defer helper.CommitOrRollback(tx)
 
-	activity, err := service.ActivityRepository.FindById(ctx, tx, request.Id)
-	helper.PanicIfError(err) // if not found
+	activity, errFind := service.ActivityRepository.FindById(ctx, tx, request.Id)
+	if errFind != nil {
+		panic(exception.NewNotFoundError(errFind.Error()))
+	}
 
-	activity.Name 	= request.Name
+	activity.Name = request.Name
 	activity.Status = request.Status
 
 	activity = service.ActivityRepository.Update(ctx, tx, activity)
@@ -70,8 +74,10 @@ func (service *ActivityServiceImpl) Delete(ctx context.Context, activityId int) 
 
 	defer helper.CommitOrRollback(tx)
 
-	activity, err := service.ActivityRepository.FindById(ctx, tx, activityId)
-	helper.PanicIfError(err) // if not found
+	activity, errFind := service.ActivityRepository.FindById(ctx, tx, activityId)
+	if errFind != nil {
+		panic(exception.NewNotFoundError(errFind.Error()))
+	}
 
 	service.ActivityRepository.Delete(ctx, tx, activity)
 }
@@ -82,8 +88,10 @@ func (service *ActivityServiceImpl) FindById(ctx context.Context, activityId int
 
 	defer helper.CommitOrRollback(tx)
 
-	activity, err := service.ActivityRepository.FindById(ctx, tx, activityId)
-	helper.PanicIfError(err) // if not found
+	activity, errFind := service.ActivityRepository.FindById(ctx, tx, activityId)
+	if errFind != nil {
+		panic(exception.NewNotFoundError(errFind.Error()))
+	}
 
 	return helper.ToActivityResponse(activity)
 }

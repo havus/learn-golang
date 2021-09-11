@@ -56,7 +56,7 @@ func (controller *ActivityControllerImpl) Update(writer http.ResponseWriter, req
 	activityUpdateRequest := web.ActivityUpdateRequest{}
 	helper.ReadFromRequestBody(request, &activityUpdateRequest)
 
-	paramId := params.ByName("categoryId")
+	paramId := params.ByName("activityId")
 	intParamId, errConversion := strconv.Atoi(paramId) 
 	helper.PanicIfError(errConversion)
 
@@ -64,7 +64,7 @@ func (controller *ActivityControllerImpl) Update(writer http.ResponseWriter, req
 
 	activityResponse := controller.ActivityService.Update(request.Context(), activityUpdateRequest)
 	webResponse := web.WebResponse{
-		Code: 	201,
+		Code: 	200,
 		Status: "Ok",
 		Data: 	activityResponse,
 	}
@@ -79,13 +79,13 @@ func (controller *ActivityControllerImpl) Update(writer http.ResponseWriter, req
 }
 
 func (controller *ActivityControllerImpl) Delete(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
-	paramId := params.ByName("categoryId")
+	paramId := params.ByName("activityId")
 	intParamId, errConversion := strconv.Atoi(paramId) 
 	helper.PanicIfError(errConversion)
 
 	controller.ActivityService.Delete(request.Context(), intParamId)
 	webResponse := web.WebResponse{
-		Code: 	201,
+		Code: 	200,
 		Status: "Ok",
 	}
 
@@ -99,14 +99,15 @@ func (controller *ActivityControllerImpl) Delete(writer http.ResponseWriter, req
 }
 
 func (controller *ActivityControllerImpl) FindById(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
-	paramId := params.ByName("categoryId")
+	paramId := params.ByName("activityId")
 	intParamId, errConversion := strconv.Atoi(paramId) 
 	helper.PanicIfError(errConversion)
 
-	controller.ActivityService.Delete(request.Context(), intParamId)
+	activityResponse := controller.ActivityService.FindById(request.Context(), intParamId)
 	webResponse := web.WebResponse{
-		Code: 	201,
+		Code: 	200,
 		Status: "Ok",
+		Data: 	activityResponse,
 	}
 
 	// writer.Header().Add("Content-Type", "application/json")
@@ -121,7 +122,7 @@ func (controller *ActivityControllerImpl) FindById(writer http.ResponseWriter, r
 func (controller *ActivityControllerImpl) FindAll(writer http.ResponseWriter, request *http.Request, params httprouter.Params) { 
 	activityResponses := controller.ActivityService.FindAll(request.Context())
 	webResponse := web.WebResponse{
-		Code: 	201,
+		Code: 	200,
 		Status: "Ok",
 		Data: 	activityResponses,
 	}

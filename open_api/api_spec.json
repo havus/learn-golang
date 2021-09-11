@@ -84,14 +84,14 @@
         }
       }
     },
-    "/activities/{activitiesId}": {
+    "/activities/{activityId}": {
       "get": {
         "security": [{ "ActivityAuth": [] }],
         "tags": ["Activities"],
         "summary": "Get activity by ID",
         "parameters": [
           {
-            "name": "activitiesId",
+            "name": "activityId",
             "in": "path",
             "description": "activity ID"
           }
@@ -115,7 +115,7 @@
         "summary": "Update activity by ID",
         "parameters": [
           {
-            "name": "activitiesId",
+            "name": "activityId",
             "in": "path",
             "description": "activity ID"
           }
@@ -148,7 +148,7 @@
         "summary": "Delete activity by ID",
         "parameters": [
           {
-            "name": "activitiesId",
+            "name": "activityId",
             "in": "path",
             "description": "activity ID"
           }
