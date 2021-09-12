@@ -1,13 +1,15 @@
 package controller
 
 import (
-	"strconv"
 	"net/http"
+	"strconv"
+
 	// "encoding/json"
-	"github.com/julienschmidt/httprouter"
+	"open_api/helper"
 	"open_api/model/web"
 	"open_api/service"
-	"open_api/helper"
+
+	"github.com/julienschmidt/httprouter"
 )
 
 type ActivityControllerImpl struct {
@@ -36,6 +38,7 @@ func (controller *ActivityControllerImpl) Create(writer http.ResponseWriter, req
 		Status: "Ok",
 		Data: 	activityResponse,
 	}
+	writer.WriteHeader(http.StatusCreated)
 
 	// writer.Header().Add("Content-Type", "application/json")
 

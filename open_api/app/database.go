@@ -1,9 +1,11 @@
 package app
 
 import (
-	"time"
 	"database/sql"
 	"open_api/helper"
+	"time"
+
+	_ "github.com/go-sql-driver/mysql"
 )
 
 func NewDB() *sql.DB {
