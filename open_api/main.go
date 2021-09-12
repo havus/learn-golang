@@ -7,6 +7,7 @@ import (
 	"open_api/controller"
 	"open_api/exception"
 	"open_api/helper"
+	"open_api/middleware"
 	"open_api/repository"
 	"open_api/service"
 
@@ -37,7 +38,7 @@ func main() {
 
 	server := http.Server{
 		Addr:    "localhost:3000",
-		Handler: router,
+		Handler: middleware.NewAuthMiddleware(router),
 	}
 
 	err := server.ListenAndServe()
