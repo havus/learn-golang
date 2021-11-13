@@ -18,11 +18,15 @@ type Person struct {
 
 // NOT CHANGE
 func (person *Person) ChangeName(newName string) {
-  person.Name = newName
+  (*person).Name = newName
 }
 
 func (person *Person) ChangeAge(newAge int) {
   person.Age = newAge
+}
+
+func (person *Person) AddAge(addedAge int) {
+  person.Age += addedAge
 }
 
 // func (error *AppError) AsMessage() AppError {
@@ -37,8 +41,8 @@ func (person *Person) ChangeAge(newAge int) {
 //   return &AppError{ Message: e.Message }
 // }
 
-func duplicatePerson(name *string, age *int) *Person {
-  return &Person{ Name: *name, Age: *age }
+func createPerson(name string, age int) *Person {
+  return &Person{ Name: name, Age: age }
 }
 
 func changeInt(number *int) {
@@ -53,11 +57,11 @@ func main() {
   // fmt.Println(*&newAge) // 30
   changeInt(&newAge)
 
-  budi.ChangeName("Ganti Budi")
+  (&budi).ChangeName("Ganti Budi")
   budi.ChangeAge(newAge)
 
   fmt.Println(budi)
 
-  joko := duplicatePerson("joko")
+  joko := createPerson("joko", 10)
   fmt.Println(joko)
 }
