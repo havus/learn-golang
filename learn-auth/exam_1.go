@@ -1,17 +1,31 @@
 package main
 
 import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/base64"
 	"fmt"
 	"log"
 	"net/http"
 	"net/url"
+	"strings"
 
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
-var db = map[string][]byte{}
+type user struct {
+	Password 	[]byte
+	FirstName	string
+}
+
+var db 				= map[string]user{}
+var sessions 	= map[string]string{}
+var key 			= []byte("secret_key")
 
 func main() {
+	fmt.Println(createToken("test"))
+
 	http.HandleFunc("/", rootHandler)
 	http.HandleFunc("/register", registerHandler)
 	http.HandleFunc("/login", loginHandler)
@@ -20,7 +34,32 @@ func main() {
 }
 
 func rootHandler(w http.ResponseWriter, r *http.Request) {
-	errMsg := r.FormValue("errMsg")
+	cookie, err := r.Cookie("sid")
+	if err != nil {
+		cookie = &http.Cookie{
+			Name: "sid",
+			Value: "",
+		}
+	}
+
+	sidCookie := cookie.Value
+	s, err := parseToken(sidCookie)
+	if err != nil {
+		log.Println("index parse token err", err)
+	}
+
+	var email string
+	if s != "" {
+		email = sessions[s]
+	}
+
+	var firstname string
+	if currentUser, ok := db[email]; ok {
+		firstname = currentUser.FirstName
+	}
+
+
+	msg := r.FormValue("msg")
 
 	html := `<!DOCTYPE html>
 	<html lang="en">
@@ -31,10 +70,14 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 		<title>Exam 1</title>
 	</head>
 	<body>
-		<h1>Error: %s</h1>
+		<h1>Your e-mail: %s</h1>
+		<h1>Message: %s</h1>
+		<h1>FirstName: %s</h1>
 
 		<h1>Register Form</h1>
 		<form action="/register" method="POST">
+			<label for="firstname">First Name<label>
+			<input type="text" name="firstname" id="firstname">
 			<input type="email" name="e">
 			<input type="password" name="p">
 			<input type="submit">
@@ -49,20 +92,30 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 	</body>
 	</html>`
 
-	fmt.Fprintf(w, html, errMsg)
+	fmt.Fprintf(w, html, email, msg, firstname)
 }
 
 func registerHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		errMsg := url.QueryEscape("your method was NOT POST")
+		msg := url.QueryEscape("your method was NOT POST")
 
-		http.Redirect(w, r, "/?errMsg=" + errMsg, http.StatusSeeOther)
+		http.Redirect(w, r, "/?msg=" + msg, http.StatusSeeOther)
 		return
 	}
 
 	if err := r.ParseForm(); err != nil {
-		errMsg := url.QueryEscape("error while parsing a body")
-		http.Redirect(w, r, "/?errMsg=" + errMsg, http.StatusSeeOther)
+		msg := url.QueryEscape("error while parsing a body")
+		http.Redirect(w, r, "/?msg=" + msg, http.StatusSeeOther)
+		return
+	}
+
+	firstname := r.PostForm.Get("firstname")
+	log.Printf(firstname)
+
+	if firstname == "" {
+		msg := url.QueryEscape("your firstname was blank")
+
+		http.Redirect(w, r, "/?msg=" + msg, http.StatusSeeOther)
 		return
 	}
 
@@ -70,45 +123,50 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 	log.Printf(email)
 
 	if email == "" {
-		errMsg := url.QueryEscape("your email was blank")
+		msg := url.QueryEscape("your email was blank")
 
-		http.Redirect(w, r, "/?errMsg=" + errMsg, http.StatusSeeOther)
+		http.Redirect(w, r, "/?msg=" + msg, http.StatusSeeOther)
 		return
 	}
 	
 	password := r.PostForm.Get("p")
 
 	if password == "" {
-		errMsg := url.QueryEscape("your password was blank")
+		msg := url.QueryEscape("your password was blank")
 
-		http.Redirect(w, r, "/?errMsg=" + errMsg, http.StatusSeeOther)
+		http.Redirect(w, r, "/?msg=" + msg, http.StatusSeeOther)
 		return
 	}
 
 	bsp, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		errMsg := "Failed to GenerateFromPassword"
+		msg := "Failed to GenerateFromPassword"
 
-		http.Error(w, errMsg, http.StatusInternalServerError)
+		http.Error(w, msg, http.StatusInternalServerError)
 		return
 	}
 
-	db[email] = bsp
+	// db[email] = bsp
+	db[email] = user{
+		Password: bsp,
+		FirstName: firstname,
+	}
+	fmt.Println(db)
 
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
 func loginHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		errMsg := url.QueryEscape("your method was NOT POST")
+		msg := url.QueryEscape("your method was NOT POST")
 
-		http.Redirect(w, r, "/?errMsg=" + errMsg, http.StatusSeeOther)
+		http.Redirect(w, r, "/?msg=" + msg, http.StatusSeeOther)
 		return
 	}
 
 	if err := r.ParseForm(); err != nil {
-		errMsg := url.QueryEscape("error while parsing a body")
-		http.Redirect(w, r, "/?errMsg=" + errMsg, http.StatusSeeOther)
+		msg := url.QueryEscape("error while parsing a body")
+		http.Redirect(w, r, "/?msg=" + msg, http.StatusSeeOther)
 		return
 	}
 
@@ -116,27 +174,80 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	log.Printf(email)
 
 	if email == "" {
-		errMsg := url.QueryEscape("your email was blank")
+		msg := url.QueryEscape("your email was blank")
 
-		http.Redirect(w, r, "/?errMsg=" + errMsg, http.StatusSeeOther)
+		http.Redirect(w, r, "/?msg=" + msg, http.StatusSeeOther)
 		return
 	}
-	
+
 	password := r.PostForm.Get("p")
 
 	if password == "" {
-		errMsg := url.QueryEscape("your password was blank")
+		msg := url.QueryEscape("your password was blank")
 
-		http.Redirect(w, r, "/?errMsg=" + errMsg, http.StatusSeeOther)
+		http.Redirect(w, r, "/?msg=" + msg, http.StatusSeeOther)
 		return
 	}
 
-	if err := bcrypt.CompareHashAndPassword(db[email], []byte(password)); err != nil {
-		errMsg := url.QueryEscape("your email or your password was wrong!!!")
+	if err := bcrypt.CompareHashAndPassword(db[email].Password, []byte(password)); err != nil {
+		msg := url.QueryEscape("your email or your password was wrong!!!")
 
-		http.Redirect(w, r, "/?errMsg=" + errMsg, http.StatusSeeOther)
+		http.Redirect(w, r, "/?msg=" + msg, http.StatusSeeOther)
 		return
 	}
 
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+	sUUID := uuid.New().String()
+	sessions[sUUID] = email
+	token := createToken(sUUID)
+
+	cookie := http.Cookie{
+		Name: 	"sid",
+		Value: 	token,
+	}
+
+	http.SetCookie(w, &cookie)
+	
+	msg := url.QueryEscape("You logged in! :)")
+	http.Redirect(w, r, "/?msg=" + msg, http.StatusSeeOther)
+}
+
+func createToken(sid string) string {
+	// func New(h func() hash.Hash, key []byte) hash.Hash
+	mac := hmac.New(sha256.New, key)
+	mac.Write([]byte(sid))
+	
+	// signedMAC := mac.Sum(nil)
+
+	// to base64
+	signedMAC := base64.StdEncoding.EncodeToString(mac.Sum(nil))
+
+	return string(signedMAC) + "|" + sid
+}
+
+func parseToken(ss string) (string, error) {
+	xs 	:= strings.SplitN(ss, "|", 2)
+	b64 := xs[0]
+
+	fmt.Println(xs, ss, "debug")
+	if len(xs) != 2 {
+		return "", fmt.Errorf("Error format while parseToken")
+	}
+
+	xb, err := base64.StdEncoding.DecodeString(b64) // []byte{}, err
+
+	if err != nil {
+		return "", fmt.Errorf("Error in parseToken %w", err)
+	}
+
+	sid := xs[1]
+	originMAC := hmac.New(sha256.New, key)
+	originMAC.Write([]byte(xs[1]))
+
+	isEqual := hmac.Equal(xb, originMAC.Sum(nil))
+
+	if !isEqual {
+		return "", fmt.Errorf("Error in parseToken hmac.Equal")
+	}
+
+	return sid, nil
 }
