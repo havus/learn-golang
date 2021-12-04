@@ -19,3 +19,10 @@ func TestDependInjectSuccess(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, dependInject)
 }
+
+func TestConnection(t *testing.T) {
+	conn, cleanup := depend_inject.InitializeConnection("ehem ehem")
+	assert.NotNil(t, conn)
+
+	cleanup()
+}
