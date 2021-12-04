@@ -7,6 +7,11 @@ import (
 )
 
 func TestDependInjectTest(t *testing.T) {
-	dependInject := depend_inject.InitializeService()
-	fmt.Println(dependInject.SimpleRepository)
+	dependInject, err := depend_inject.InitializeService()
+	if err != nil {
+		fmt.Println(err)
+		fmt.Println(dependInject)
+	} else {
+		fmt.Println(dependInject.SimpleRepository)
+	}
 }

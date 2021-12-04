@@ -10,8 +10,11 @@ package depend_inject
 
 // run command: `wire gen open_api/depend_inject`
 // or run command `cd depend_inject && wire`
-func InitializeService() *SimpleService {
+func InitializeService() (*SimpleService, error) {
 	simpleRepository := NewSimpleRepository()
-	simpleService := NewSimpleService(simpleRepository)
-	return simpleService
+	simpleService, err := NewSimpleService(simpleRepository)
+	if err != nil {
+		return nil, err
+	}
+	return simpleService, nil
 }
