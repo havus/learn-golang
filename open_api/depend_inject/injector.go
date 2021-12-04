@@ -70,3 +70,11 @@ func InitializeFooBar() *FooBar {
 	wire.Build(fooBarSet, wire.Struct(new(FooBar), "*"))
 	return nil
 }
+
+var fooValue = &Foo{}
+var barValue = &Bar{}
+
+func InitializeFooBarUsingValue() *FooBar {
+	wire.Build(wire.Value(fooValue), wire.Value(barValue), wire.Struct(new(FooBar), "*"))
+	return nil
+}
