@@ -37,3 +37,23 @@ func InitializeFooBarService() *FooBarService {
 	)
 	return nil
 }
+
+var helloSet = wire.NewSet(
+	NewHelloImpl,
+	// wire.Bind(kalo ada yg butuh => new(Hello), balikkan => *new(HelloImpl))
+	wire.Bind(new(Hello), new(*HelloImpl)),
+)
+
+func InitializeHelloService() *HelloService {
+	// expected after binding
+	// hello := NewHelloImpl() // *HelloImpl
+	// helloService := NewHelloService(hello)
+
+	// wrong way
+	// wire.Build(NewHelloImpl, NewHelloService)
+
+	// correct way
+	wire.Build(helloSet, NewHelloService)
+
+	return nil
+}
