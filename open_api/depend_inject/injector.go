@@ -9,7 +9,7 @@ import (
 
 // run command: `wire gen open_api/depend_inject`
 // or run command `cd depend_inject && wire`
-func InitializeService() (*SimpleService, error) {
+func InitializeService(isAnError bool) (*SimpleService, error) {
 	wire.Build(
 		NewSimpleRepository,
 		NewSimpleService,

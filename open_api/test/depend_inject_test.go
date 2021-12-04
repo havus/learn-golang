@@ -1,17 +1,21 @@
 package test
 
 import (
-	"fmt"
 	"open_api/depend_inject"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
-func TestDependInjectTest(t *testing.T) {
-	dependInject, err := depend_inject.InitializeService()
-	if err != nil {
-		fmt.Println(err)
-		fmt.Println(dependInject)
-	} else {
-		fmt.Println(dependInject.SimpleRepository)
-	}
+func TestDependInjectError(t *testing.T) {
+	dependInject, err := depend_inject.InitializeService(true)
+
+	assert.NotNil(t, err)
+	assert.Nil(t, dependInject)
+}
+
+func TestDependInjectSuccess(t *testing.T) {
+	dependInject, err := depend_inject.InitializeService(false)
+	assert.Nil(t, err)
+	assert.NotNil(t, dependInject)
 }
