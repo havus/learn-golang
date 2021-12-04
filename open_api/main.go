@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"open_api/app"
 	"open_api/controller"
@@ -26,6 +27,7 @@ func main() {
 		Handler: middleware.NewAuthMiddleware(router),
 	}
 
+	fmt.Println("Server ran on port 3000")
 	err := server.ListenAndServe()
 	helper.PanicIfError(err)
 }

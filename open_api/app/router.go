@@ -1,7 +1,6 @@
 package app
 
 import (
-	"fmt"
 	"open_api/controller"
 	"open_api/exception"
 
@@ -17,8 +16,6 @@ func NewRouter(activityController controller.ActivityController) *httprouter.Rou
 
 	router.GET("/api/activities", activityController.FindAll)
 	router.GET("/api/activities/:activityId", activityController.FindById)
-
-	fmt.Println("Impressive, server running now...!")
 
 	router.PanicHandler = exception.ErrorHandler
 
