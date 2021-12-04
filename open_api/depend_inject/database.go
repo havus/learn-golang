@@ -46,7 +46,7 @@ type DatabaseRepository struct {
 func NewDatabaseRepository(
 	postgreSQL *DatabasePostgreSQL,
 	mySQL *DatabaseMySQL,
-	mongoDB *DatabaseMongoDB
+	mongoDB *DatabaseMongoDB,
 ) *DatabaseRepository {
 	return &DatabaseRepository{
 		DatabasePostgreSQL: postgreSQL,

@@ -6,6 +6,10 @@
 
 package depend_inject
 
+import (
+	"github.com/google/wire"
+)
+
 // Injectors from injector.go:
 
 // run command: `wire gen open_api/depend_inject`
@@ -26,3 +30,18 @@ func InitializeDatabaseRepo() *DatabaseRepository {
 	databaseRepository := NewDatabaseRepository(databasePostgreSQL, databaseMySQL, databaseMongoDB)
 	return databaseRepository
 }
+
+func InitializeFooBarService() *FooBarService {
+	fooRepository := NewFooRepo()
+	fooService := NewFooService(fooRepository)
+	barRepository := NewBarRepo()
+	barService := NewBarService(barRepository)
+	fooBarService := NewFooBarService(fooService, barService)
+	return fooBarService
+}
+
+// injector.go:
+
+var fooSet = wire.NewSet(NewFooRepo, NewFooService)
+
+var barSet = wire.NewSet(NewBarRepo, NewBarService)
