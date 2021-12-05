@@ -1,15 +1,14 @@
 package main
 
 import (
-	"crypto/hmac"
-	"crypto/sha256"
-	"encoding/base64"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
 	"net/url"
-	"strings"
+	"time"
 
+	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -17,6 +16,11 @@ import (
 type user struct {
 	Password 	[]byte
 	FirstName	string
+}
+
+type customClaims struct {
+	jwt.StandardClaims
+	SID 			string
 }
 
 var db 				= map[string]user{}
@@ -43,14 +47,16 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	sidCookie := cookie.Value
-	s, err := parseToken(sidCookie)
+	// s, err := parseToken(sidCookie)
+	sID, err := parseToken(sidCookie)
+
 	if err != nil {
 		log.Println("index parse token err", err)
 	}
 
 	var email string
-	if s != "" {
-		email = sessions[s]
+	if sID != "" {
+		email = sessions[sID]
 	}
 
 	var firstname string
@@ -198,7 +204,14 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 
 	sUUID := uuid.New().String()
 	sessions[sUUID] = email
-	token := createToken(sUUID)
+	token, err := createToken(sUUID)
+	if err != nil {
+		log.Printf("error in loginHandler while create token:", err)
+
+		msg := url.QueryEscape("Our server did not get your token for lunch, please take a break now!")
+		http.Redirect(w, r, "/?msg=" + msg, http.StatusSeeOther)
+		return
+	}
 
 	cookie := http.Cookie{
 		Name: 	"sid",
@@ -211,43 +224,75 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/?msg=" + msg, http.StatusSeeOther)
 }
 
-func createToken(sid string) string {
-	// func New(h func() hash.Hash, key []byte) hash.Hash
-	mac := hmac.New(sha256.New, key)
-	mac.Write([]byte(sid))
-	
-	// signedMAC := mac.Sum(nil)
+func createToken(sid string) (string, error) {
+	cc := customClaims{
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: time.Now().Add(3 * time.Minute).Unix(),
+		},
+		SID: sid,
+	}
+	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, cc)
+	ss, err := jwtToken.SignedString(key)
 
-	// to base64
-	signedMAC := base64.StdEncoding.EncodeToString(mac.Sum(nil))
+	if err != nil {
+		return "", fmt.Errorf("couldn't sign jwt in createToken %w", err)
+	}
+	return ss, nil
 
-	return string(signedMAC) + "|" + sid
+	// // func New(h func() hash.Hash, key []byte) hash.Hash
+	// mac := hmac.New(sha256.New, key)
+	// mac.Write([]byte(sid))
+
+	// // signedMAC := mac.Sum(nil)
+
+	// // to base64
+	// signedMAC := base64.StdEncoding.EncodeToString(mac.Sum(nil))
+
+	// return string(signedMAC) + "|" + sid
 }
 
 func parseToken(ss string) (string, error) {
-	xs 	:= strings.SplitN(ss, "|", 2)
-	b64 := xs[0]
+	token, err := jwt.ParseWithClaims(ss, &customClaims{}, func (t *jwt.Token) (interface{}, error) {
+		if t.Method.Alg() != jwt.SigningMethodHS256.Alg() {
+			return nil, errors.New("ParseWithClaims different alg used")
+		}
 
-	fmt.Println(xs, ss, "debug")
-	if len(xs) != 2 {
-		return "", fmt.Errorf("Error format while parseToken")
-	}
-
-	xb, err := base64.StdEncoding.DecodeString(b64) // []byte{}, err
+		return key, nil
+	})
 
 	if err != nil {
-		return "", fmt.Errorf("Error in parseToken %w", err)
+		return "", fmt.Errorf("couldn't ParsewithClaims in parseToken %w", err)
 	}
 
-	sid := xs[1]
-	originMAC := hmac.New(sha256.New, key)
-	originMAC.Write([]byte(xs[1]))
-
-	isEqual := hmac.Equal(xb, originMAC.Sum(nil))
-
-	if !isEqual {
-		return "", fmt.Errorf("Error in parseToken hmac.Equal")
+	if !token.Valid {
+		return "", fmt.Errorf("invalid token in parseToken %w", err)
 	}
 
-	return sid, nil
+	return token.Claims.(*customClaims).SID, nil
+
+	// xs 	:= strings.SplitN(ss, "|", 2)
+	// b64 := xs[0]
+
+	// fmt.Println(xs, ss, "debug")
+	// if len(xs) != 2 {
+	// 	return "", fmt.Errorf("Error format while parseToken")
+	// }
+
+	// xb, err := base64.StdEncoding.DecodeString(b64) // []byte{}, err
+
+	// if err != nil {
+	// 	return "", fmt.Errorf("Error in parseToken %w", err)
+	// }
+
+	// sid := xs[1]
+	// originMAC := hmac.New(sha256.New, key)
+	// originMAC.Write([]byte(xs[1]))
+
+	// isEqual := hmac.Equal(xb, originMAC.Sum(nil))
+
+	// if !isEqual {
+	// 	return "", fmt.Errorf("Error in parseToken hmac.Equal")
+	// }
+
+	// return sid, nil
 }
