@@ -12,7 +12,7 @@ import (
 type ActivityRepositoryImpl struct {
 }
 
-func NewActivityRepository() ActivityRepository {
+func NewActivityRepository() *ActivityRepositoryImpl {
 	return &ActivityRepositoryImpl{}
 }
 
