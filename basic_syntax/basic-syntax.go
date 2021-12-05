@@ -118,6 +118,12 @@ func main() {
 	delete(myMap, "address")
 	fmt.Println("myMap", myMap)
 
+	if testVar, ok := myMap["oke"]; ok {
+		fmt.Println("myMap-test", myMap["oke"], testVar)
+	} else {
+		fmt.Println("myMap-test", ok)
+	}
+
 	// var dummyMap map[string]string = map[string]string{} // data ada
 	var dummyMap map[string]string // data kosong
 
@@ -180,7 +186,7 @@ func main() {
 	// 	fmt.Println("Integer", value, returnRandom().(string))
 	// }
 
-	fmt.Println(returnRandom().(string))
+	// fmt.Println(returnRandom().(string))
 
 	fmt.Println("================== Loop ==================")
 
