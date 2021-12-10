@@ -33,6 +33,7 @@ func main() {
 	http.HandleFunc("/", rootHandler)
 	http.HandleFunc("/register", registerHandler)
 	http.HandleFunc("/login", loginHandler)
+	http.HandleFunc("/logout", logoutHandler)
 
 	http.ListenAndServe(":3000", nil)
 }
@@ -94,6 +95,10 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 			<input type="email" name="e">
 			<input type="password" name="p">
 			<input type="submit">
+		</form>
+
+		<form action="/logout" method="POST">
+			<input type="submit" value="Logout">
 		</form>
 	</body>
 	</html>`
@@ -222,6 +227,36 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	
 	msg := url.QueryEscape("You logged in! :)")
 	http.Redirect(w, r, "/?msg=" + msg, http.StatusSeeOther)
+}
+
+func logoutHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return
+	}
+
+	cookie, err := r.Cookie("sid")
+	if err != nil {
+		cookie = &http.Cookie{
+			Name: "sid",
+			Value: "",
+		}
+	}
+
+	sidCookie := cookie.Value
+	// s, err := parseToken(sidCookie)
+	sID, err := parseToken(sidCookie)
+
+	if err != nil {
+		log.Println("index parse token err", err)
+	}
+
+	delete(sessions, sID)
+
+	cookie.MaxAge = -1
+
+	http.SetCookie(w, cookie)
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
 func createToken(sid string) (string, error) {
